@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kahenda/afya-plus/backend/config"
+	"github.com/kahenda/afya-plus/backend/handlers"
 )
 
 func main() {
@@ -17,6 +18,8 @@ func main() {
 			"status": "Afya Plus backend is running",
 		})
 	})
+
+	router.POST("/users", handlers.CreateUser)
 
 	router.Run(":8080")
 }
