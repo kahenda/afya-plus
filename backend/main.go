@@ -21,6 +21,7 @@ func main() {
 
 	router.POST("/users", handlers.CreateUser)
 	router.POST("/households", handlers.CreateHousehold)
+	router.POST("/visits", handlers.CreateVisit)
 
 	router.Run(":8080")
 }
