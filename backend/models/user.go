@@ -19,3 +19,8 @@ type CreateUserInput struct {
 	Role        string `json:"role" binding:"required,oneof=chw supervisor"`
 	Zone        string `json:"zone"`
 }
+
+type LoginInput struct {
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Pin         string `json:"pin" binding:"required,len=4"`
+}
