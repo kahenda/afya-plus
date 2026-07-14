@@ -19,6 +19,7 @@ func main() {
 		})
 	})
 
+	router.POST("/login", handlers.Login)
 	router.POST("/users", handlers.CreateUser)
 	router.POST("/households", handlers.CreateHousehold)
 	router.POST("/visits", handlers.CreateVisit)
