@@ -23,6 +23,8 @@ func main() {
 	router.POST("/users", handlers.CreateUser)
 	router.POST("/households", handlers.CreateHousehold)
 	router.POST("/visits", handlers.CreateVisit)
+	router.GET("/flags", handlers.GetFlags)
+	router.PATCH("/flags/:id", handlers.UpdateFlagStatus)
 
 	router.Run(":8080")
 }
