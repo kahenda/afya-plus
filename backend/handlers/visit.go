@@ -43,5 +43,8 @@ func CreateVisit(c *gin.Context) {
 		return
 	}
 
+	// Run risk-flagging rules now that the visit is safely stored
+	checkAndCreateFlags(newVisit.ID, newVisit.HouseholdID, input)
+
 	c.JSON(http.StatusCreated, newVisit)
 }
