@@ -63,3 +63,63 @@ func GetHouseholds(c *gin.Context) {
 
 	c.JSON(http.StatusOK, households)
 }
+
+func GetHouseholdDetail(c *gin.Context) {
+	householdID := c.Param("id")
+	ctx := context.Background()
+
+	var household models.Household
+	err := config.DB.QueryRow(ctx, `
+		SELECT id, head_name, location, member_count, created_by, created_at
+		FROM households WHERE id = $1
+	`, householdID).Scan(&household.ID, &household.HeadName, &household.Location, &household.MemberCount, &household.CreatedBy, &household.CreatedAt)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "household not found"})
+		return
+	}
+
+	visitRows, err := config.DB.Query(ctx, `
+		SELECT id, household_id, chw_id, client_visit_id, visit_type, vaccination_done, notes, visited_at, synced_at
+		FROM visits WHERE household_id = $1 ORDER BY visited_at DESC
+	`, householdID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch visits: " + err.Error()})
+		return
+	}
+	defer visitRows.Close()
+
+	visits := []models.Visit{}
+	for visitRows.Next() {
+		var v models.Visit
+		if err := visitRows.Scan(&v.ID, &v.HouseholdID, &v.ChwID, &v.ClientVisitID, &v.VisitType, &v.VaccinationDone, &v.Notes, &v.VisitedAt, &v.SyncedAt); err != nil {
+			continue
+		}
+		visits = append(visits, v)
+	}
+
+	flagRows, err := config.DB.Query(ctx, `
+		SELECT id, visit_id, household_id, reason, status, assigned_to, created_at, updated_at
+		FROM flags WHERE household_id = $1 ORDER BY created_at DESC
+	`, householdID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch flags: " + err.Error()})
+		return
+	}
+	defer flagRows.Close()
+
+	flags := []models.Flag{}
+	for flagRows.Next() {
+		var f models.Flag
+		if err := flagRows.Scan(&f.ID, &f.VisitID, &f.HouseholdID, &f.Reason, &f.Status, &f.AssignedTo, &f.CreatedAt, &f.UpdatedAt); err != nil {
+			continue
+		}
+		flags = append(flags, f)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"household": household,
+		"visits":    visits,
+		"flags":     flags,
+	})
+}
