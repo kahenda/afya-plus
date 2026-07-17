@@ -39,3 +39,27 @@ func CreateHousehold(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, newHousehold)
 }
+
+func GetHouseholds(c *gin.Context) {
+	ctx := context.Background()
+	rows, err := config.DB.Query(ctx, `
+		SELECT id, head_name, location, member_count, created_by, created_at
+		FROM households ORDER BY created_at DESC
+	`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch households: " + err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	households := []models.Household{}
+	for rows.Next() {
+		var h models.Household
+		if err := rows.Scan(&h.ID, &h.HeadName, &h.Location, &h.MemberCount, &h.CreatedBy, &h.CreatedAt); err != nil {
+			continue
+		}
+		households = append(households, h)
+	}
+
+	c.JSON(http.StatusOK, households)
+}
