@@ -23,6 +23,7 @@ func main() {
 
 	router.POST("/login", handlers.Login)
 	router.POST("/users", handlers.CreateUser)
+	router.GET("/users", handlers.GetUsers)
 	router.POST("/households", handlers.CreateHousehold)
 	router.GET("/households", handlers.GetHouseholds)
 	router.GET("/households/:id", handlers.GetHouseholdDetail)
