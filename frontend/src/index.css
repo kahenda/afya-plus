@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-cream: #FAF3E7;
+  --color-ink: #1B2E2C;
+  --color-teal: #0E7C7B;
+  --color-teal-dark: #0A5B5A;
+  --color-gold: #E8A93E;
+}
+
+body {
+  font-family: var(--font-body);
+}
