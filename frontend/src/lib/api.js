@@ -31,3 +31,13 @@ export async function getFlags() {
   if (!res.ok) throw new Error('Failed to fetch flags')
   return res.json()
 }
+
+export async function updateFlagStatus(id, status) {
+  const res = await fetch(`http://localhost:8080/flags/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) throw new Error('Failed to update flag status')
+  return res.json()
+}
