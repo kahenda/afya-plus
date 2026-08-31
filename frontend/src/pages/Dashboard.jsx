@@ -1,13 +1,29 @@
 import { useState, useEffect } from 'react'
 import { getSession, clearSession } from '../lib/session'
-import { getFlags } from '../lib/api'
+import { getFlags, updateFlagStatus } from '../lib/api'
 import LogVisit from './LogVisit'
+
+const STATUS_FLOW = ['flagged', 'under_review', 'action_taken', 'resolved']
+
+const STATUS_LABELS = {
+  flagged: 'Flagged',
+  under_review: 'Under Review',
+  action_taken: 'Action Taken',
+  resolved: 'Resolved',
+}
+
+const NEXT_ACTION_LABEL = {
+  flagged: 'Start review',
+  under_review: 'Mark action taken',
+  action_taken: 'Mark resolved',
+}
 
 export default function Dashboard({ onLogout }) {
   const user = getSession()
   const [showLogVisit, setShowLogVisit] = useState(false)
   const [flags, setFlags] = useState([])
   const [loadingFlags, setLoadingFlags] = useState(true)
+  const [updatingId, setUpdatingId] = useState(null)
 
   useEffect(() => {
     loadFlags()
@@ -19,6 +35,21 @@ export default function Dashboard({ onLogout }) {
       .then(setFlags)
       .catch(() => {})
       .finally(() => setLoadingFlags(false))
+  }
+
+  async function handleAdvanceStatus(flag) {
+    const currentIndex = STATUS_FLOW.indexOf(flag.status)
+    const nextStatus = STATUS_FLOW[currentIndex + 1]
+    if (!nextStatus) return
+
+    setUpdatingId(flag.id)
+    try {
+      const updated = await updateFlagStatus(flag.id, nextStatus)
+      setFlags((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
+    } catch (err) {
+      console.error(err)
+    }
+    setUpdatingId(null)
   }
 
   function handleLogout() {
@@ -98,10 +129,20 @@ export default function Dashboard({ onLogout }) {
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-heading font-bold">{reasonLabels[f.reason] || f.reason}</p>
                   <span className="text-xs font-medium capitalize px-2 py-1 rounded-full bg-white/60">
-                    {f.status.replace('_', ' ')}
+                    {STATUS_LABELS[f.status]}
                   </span>
                 </div>
-                <p className="text-xs opacity-70">Household #{f.household_id} · Visit #{f.visit_id}</p>
+                <p className="text-xs opacity-70 mb-3">Household #{f.household_id} · Visit #{f.visit_id}</p>
+
+                {NEXT_ACTION_LABEL[f.status] && (
+                  <button
+                    onClick={() => handleAdvanceStatus(f)}
+                    disabled={updatingId === f.id}
+                    className="text-xs font-semibold bg-white/70 hover:bg-white px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {updatingId === f.id ? 'Updating...' : NEXT_ACTION_LABEL[f.status] + ' →'}
+                  </button>
+                )}
               </div>
             ))}
           </div>
